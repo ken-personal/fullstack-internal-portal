@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Admin theme tweaks ===== */
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
+}
+
+/* Scrollbar nice look */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+/* Card shadow */
+
+.card {
+  @apply bg-white rounded shadow;
+}
