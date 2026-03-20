@@ -1,0 +1,138 @@
+name: Frontend CD
+
+# mainブランチへのpush時 かつ frontendフォルダに変更がある場合のみ実行
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+
+env:
+  AWS_REGION: ap-northeast-1
+  ECR_REPOSITORY: internal-portal/frontend
+  ECS_CLUSTER: internal-portal-cluster
+  ECS_SERVICE: internal-portal-svc-frontend
+  CONTAINER_NAME: frontend
+
+jobs:
+  deploy:
+    name: Build & Deploy to ECS
+    runs-on: ubuntu-latest
+
+    # OIDCトークン取得に必要なパーミッション（アクセスキー不要）
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      # =========================================
+      # 1. コードチェックアウト
+      # =========================================
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # =========================================
+      # 2. AWS認証（OIDC - アクセスキー不要）
+      # =========================================
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # =========================================
+      # 3. ECRログイン
+      # =========================================
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # =========================================
+      # 4. Dockerイメージビルド & ECRにpush
+      # =========================================
+      - name: Build and push Docker image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            ./frontend
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      # =========================================
+      # 5. Trivyセキュリティスキャン（AWS推奨）
+      #    HIGH・CRITICALの脆弱性があればデプロイ停止
+      # =========================================
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.build-image.outputs.image }}
+          format: "table"
+          exit-code: "1"
+          severity: "HIGH,CRITICAL"
+
+      # =========================================
+      # 6. ECSタスク定義を最新イメージで更新
+      # =========================================
+      - name: Download current task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition internal-portal-frontend \
+            --query taskDefinition \
+            > task-definition.json
+
+      - name: Update ECS task definition with new image
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      # =========================================
+      # 7. ECSへデプロイ
+      # =========================================
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true # デプロイ完了まで待機
+
+      # =========================================
+      # 8. SNS通知（成功）
+      # =========================================
+      - name: Notify success via SNS
+        if: success()
+        run: |
+          aws sns publish \
+            --topic-arn ${{ secrets.SNS_TOPIC_ARN }} \
+            --subject "✅ [Frontend] デプロイ成功" \
+            --message "リポジトリ: ${{ github.repository }}
+          ブランチ: ${{ github.ref_name }}
+          コミット: ${{ github.sha }}
+          実行者: ${{ github.actor }}
+          ステータス: 成功"
+
+      # =========================================
+      # 9. SNS通知（失敗）
+      # =========================================
+      - name: Notify failure via SNS
+        if: failure()
+        run: |
+          aws sns publish \
+            --topic-arn ${{ secrets.SNS_TOPIC_ARN }} \
+            --subject "❌ [Frontend] デプロイ失敗" \
+            --message "リポジトリ: ${{ github.repository }}
+          ブランチ: ${{ github.ref_name }}
+          コミット: ${{ github.sha }}
+          実行者: ${{ github.actor }}
+          ステータス: 失敗
+          確認URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

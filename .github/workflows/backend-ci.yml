@@ -1,0 +1,63 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "backend-nestjs/**"
+
+jobs:
+  ci:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-nestjs
+
+    steps:
+      # =========================================
+      # 1. コードチェックアウト
+      # =========================================
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # =========================================
+      # 2. Node.jsセットアップ
+      # =========================================
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend-nestjs/package-lock.json
+
+      # =========================================
+      # 3. 依存関係インストール
+      # =========================================
+      - name: Install dependencies
+        run: npm ci
+
+      # =========================================
+      # 4. ESLint チェック
+      # =========================================
+      - name: Run ESLint
+        run: npm run lint
+
+      # =========================================
+      # 5. TypeScript 型チェック
+      # =========================================
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      # =========================================
+      # 6. Jestユニットテスト
+      # =========================================
+      - name: Run tests
+        run: npm test -- --passWithNoTests
+
+      # =========================================
+      # 7. Prismaスキーマ検証
+      # =========================================
+      - name: Validate Prisma schema
+        run: npx prisma validate

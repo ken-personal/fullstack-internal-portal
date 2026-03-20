@@ -1,0 +1,145 @@
+name: Backend CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend-nestjs/**"
+
+env:
+  AWS_REGION: ap-northeast-1
+  ECR_REPOSITORY: internal-portal/backend
+  ECS_CLUSTER: internal-portal-cluster
+  ECS_SERVICE: internal-portal-svc-backend
+  CONTAINER_NAME: backend
+
+jobs:
+  deploy:
+    name: Build & Deploy to ECS
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      # =========================================
+      # 1. コードチェックアウト
+      # =========================================
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # =========================================
+      # 2. AWS認証（OIDC）
+      # =========================================
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # =========================================
+      # 3. ECRログイン
+      # =========================================
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # =========================================
+      # 4. Dockerイメージビルド & ECRにpush
+      # =========================================
+      - name: Build and push Docker image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            ./backend-nestjs
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      # =========================================
+      # 5. Trivyセキュリティスキャン
+      # =========================================
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.build-image.outputs.image }}
+          format: "table"
+          exit-code: "1"
+          severity: "HIGH,CRITICAL"
+
+      # =========================================
+      # 6. Prismaマイグレーション（本番DB）
+      # =========================================
+      - name: Run Prisma migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          cd backend-nestjs
+          npx prisma migrate deploy
+
+      # =========================================
+      # 7. ECSタスク定義を最新イメージで更新
+      # =========================================
+      - name: Download current task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition internal-portal-backend \
+            --query taskDefinition \
+            > task-definition.json
+
+      - name: Update ECS task definition with new image
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      # =========================================
+      # 8. ECSへデプロイ
+      # =========================================
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      # =========================================
+      # 9. SNS通知（成功）
+      # =========================================
+      - name: Notify success via SNS
+        if: success()
+        run: |
+          aws sns publish \
+            --topic-arn ${{ secrets.SNS_TOPIC_ARN }} \
+            --subject "✅ [Backend] デプロイ成功" \
+            --message "リポジトリ: ${{ github.repository }}
+          ブランチ: ${{ github.ref_name }}
+          コミット: ${{ github.sha }}
+          実行者: ${{ github.actor }}
+          ステータス: 成功"
+
+      # =========================================
+      # 10. SNS通知（失敗）
+      # =========================================
+      - name: Notify failure via SNS
+        if: failure()
+        run: |
+          aws sns publish \
+            --topic-arn ${{ secrets.SNS_TOPIC_ARN }} \
+            --subject "❌ [Backend] デプロイ失敗" \
+            --message "リポジトリ: ${{ github.repository }}
+          ブランチ: ${{ github.ref_name }}
+          コミット: ${{ github.sha }}
+          実行者: ${{ github.actor }}
+          ステータス: 失敗
+          確認URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
