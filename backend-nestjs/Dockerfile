@@ -27,4 +27,4 @@ RUN npm run build
 # コンテナ起動時に Prisma の型不整合で落ちないよう、
 # 本番ビルド済みの JS を実行します
 EXPOSE 3000
-CMD ["npm", "run", "start:prod"]
+CMD npx prisma migrate deploy && npm run start:prod
