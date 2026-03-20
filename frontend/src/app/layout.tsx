@@ -21,13 +21,14 @@ export default function RootLayout({
   const isAuthPage = pathname === "/login" || pathname === "/signup";
 
   useEffect(() => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token && !isAuthPage) {
-      router.push("/login");
-    } else if (token && isAuthPage) {
-      router.push("/");
-    }
+    【開発確認用】認証チェック一時スキップ
+     const token =
+       typeof window !== "undefined" ? localStorage.getItem("token") : null;
+     if (!token && !isAuthPage) {
+       router.push("/login");
+     } else if (token && isAuthPage) {
+       router.push("/");
+     }
     setIsAuthChecked(true);
   }, [pathname, isAuthPage, router]);
 
@@ -50,12 +51,10 @@ export default function RootLayout({
       </head>
       <body className="bg-zinc-50 text-zinc-900 antialiased">
         {isAuthPage ? (
-          // ログイン・サインアップ画面（サイドバーなし・全画面）
           <main className="min-h-screen">
             {children}
           </main>
         ) : (
-          // メインコンテンツ（サイドバー＋ヘッダーあり）
           <div className="flex min-h-screen">
             <Sidebar />
             <div className="flex-1 flex flex-col">
