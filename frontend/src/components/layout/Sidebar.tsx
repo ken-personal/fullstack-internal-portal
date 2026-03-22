@@ -9,51 +9,188 @@ import {
   FaEnvelope,
   FaUser,
   FaMoneyBill,
+  FaRobot,
 } from "react-icons/fa";
 
-// 🔴 メニュー名を日本語に変更
 const menu = [
-  { name: "ダッシュボード", href: "/", icon: FaChartBar },
+  { name: "ダッシュボード", href: "/dashboard", icon: FaChartBar },
   { name: "売上管理", href: "/sales", icon: FaDollarSign },
   { name: "経費管理", href: "/expenses", icon: FaMoneyBill },
   { name: "社内連絡", href: "/announcements", icon: FaBullhorn },
   { name: "お問い合わせ", href: "/inquiry", icon: FaEnvelope },
   { name: "社員名簿", href: "/profile", icon: FaUser },
+  { name: "AI アシスタント", href: "/chat", icon: FaRobot },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-slate-900 text-white min-h-screen">
-      {/* 🔴 パネル名を日本語に変更 */}
-      <div className="p-6 text-xl font-bold border-b border-slate-700 tracking-wider">
-        社内システム
+    <aside
+      style={{
+        width: 240,
+        background: "#0d0d0f",
+        borderRight: "1px solid #1e1e24",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        flexShrink: 0,
+      }}
+    >
+      <div
+        style={{
+          padding: "20px 20px 16px",
+          borderBottom: "1px solid #1e1e24",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
+        <div
+          style={{
+            width: 26,
+            height: 26,
+            borderRadius: 8,
+            background: "linear-gradient(135deg, #5e6ad2, #8b5cf6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 13,
+            color: "white",
+            fontWeight: 700,
+            flexShrink: 0,
+          }}
+        >
+          S
+        </div>
+        <span
+          style={{
+            fontSize: 15,
+            fontWeight: 600,
+            color: "#e2e2e5",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          社内システム
+        </span>
       </div>
 
-      <nav className="mt-4">
+      <nav style={{ padding: "16px 10px", flex: 1 }}>
+        <p
+          style={{
+            fontSize: 11,
+            color: "#4a4a58",
+            fontWeight: 600,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            padding: "0 8px 8px",
+            margin: 0,
+          }}
+        >
+          メニュー
+        </p>
         {menu.map((item) => {
           const Icon = item.icon;
-          const active = item.href === "/" 
-            ? pathname === "/" 
-            : pathname.startsWith(item.href);
+          const active =
+            pathname === item.href ||
+            (item.href !== "/" && pathname.startsWith(item.href));
+          const isAI = item.href === "/chat";
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-6 py-3 hover:bg-slate-800 transition ${
-                active ? "bg-slate-800 border-l-4 border-blue-500" : ""
-              }`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "9px 12px",
+                borderRadius: 8,
+                marginBottom: 2,
+                background: active ? "#1e1e28" : "transparent",
+                color: active ? "#e2e2e5" : "#7a7a8a",
+                fontSize: 14,
+                fontWeight: active ? 500 : 400,
+                textDecoration: "none",
+                transition: "all 0.1s",
+              }}
+              onMouseEnter={(e) => {
+                if (!active) {
+                  e.currentTarget.style.background = "#16161c";
+                  e.currentTarget.style.color = "#c2c2cc";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "#7a7a8a";
+                }
+              }}
             >
-              <Icon />
-              <span className={active ? "text-blue-400 font-bold" : ""}>
-                {item.name}
-              </span>
+              <Icon
+                size={15}
+                style={{
+                  color: active ? (isAI ? "#8b5cf6" : "#5e6ad2") : "#4a4a58",
+                  flexShrink: 0,
+                }}
+              />
+              <span>{item.name}</span>
+              {isAI && (
+                <span
+                  style={{
+                    marginLeft: "auto",
+                    fontSize: 10,
+                    background: "#2d1f4e",
+                    color: "#8b5cf6",
+                    padding: "2px 6px",
+                    borderRadius: 999,
+                    fontWeight: 600,
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  AI
+                </span>
+              )}
             </Link>
           );
         })}
       </nav>
+
+      <div
+        style={{
+          padding: "14px 20px",
+          borderTop: "1px solid #1e1e24",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
+        <div
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: "50%",
+            background: "#1e1e28",
+            border: "1px solid #2a2a35",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 11,
+            color: "#7a7a8a",
+            flexShrink: 0,
+          }}
+        >
+          管
+        </div>
+        <div>
+          <p style={{ fontSize: 13, color: "#c2c2cc", fontWeight: 500, margin: 0 }}>
+            管理者
+          </p>
+          <p style={{ fontSize: 11, color: "#4a4a58", margin: 0 }}>
+            Administrator
+          </p>
+        </div>
+      </div>
     </aside>
   );
 }

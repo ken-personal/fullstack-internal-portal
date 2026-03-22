@@ -21,13 +21,14 @@ export default function RootLayout({
   const isAuthPage = pathname === "/login" || pathname === "/signup";
 
   useEffect(() => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token && !isAuthPage) {
-      router.push("/login");
-    } else if (token && isAuthPage) {
-      router.push("/");
-    }
+     【開発確認用】認証チェック一時スキップ
+     const token =
+       typeof window !== "undefined" ? localStorage.getItem("token") : null;
+     if (!token && !isAuthPage) {
+       router.push("/login");
+     } else if (token && isAuthPage) {
+       router.push("/");
+     }
     setIsAuthChecked(true);
   }, [pathname, isAuthPage, router]);
 
@@ -37,7 +38,7 @@ export default function RootLayout({
         <head>
           <title>読み込み中... | 社内システム</title>
         </head>
-        <body className="bg-zinc-50"></body>
+        <body style={{ background: "#0d0d0f" }}></body>
       </html>
     );
   }
@@ -48,7 +49,7 @@ export default function RootLayout({
         <title>社内管理システム</title>
         <meta name="description" content="経営情報・社員管理ポータル" />
       </head>
-      <body className="bg-zinc-50 text-zinc-900 antialiased">
+      <body style={{ background: "#0d0d0f", color: "#e2e2e5" }} className="antialiased">
         {isAuthPage ? (
           <main className="min-h-screen">
             {children}
@@ -58,12 +59,28 @@ export default function RootLayout({
             <Sidebar />
             <div className="flex-1 flex flex-col">
               <Navbar />
-              <main className="p-6 md:p-10 flex-1 overflow-y-auto">
+              <main
+                style={{
+                  padding: "24px 32px",
+                  flex: 1,
+                  overflowY: "auto",
+                  background: "#0d0d0f",
+                }}
+              >
                 <div className="max-w-7xl mx-auto">
                   {children}
                 </div>
               </main>
-              <footer className="py-4 text-center text-xs text-zinc-400 bg-white border-t">
+              <footer
+                style={{
+                  padding: "12px",
+                  textAlign: "center",
+                  fontSize: 11,
+                  color: "#4a4a58",
+                  background: "#0d0d0f",
+                  borderTop: "1px solid #1e1e24",
+                }}
+              >
                 © 2026 社内管理システム All Rights Reserved.
               </footer>
             </div>
