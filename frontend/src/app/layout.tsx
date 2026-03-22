@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { Toaster } from "react-hot-toast";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -49,6 +50,17 @@ export default function RootLayout({
         <meta name="description" content="経営情報・社員管理ポータル" />
       </head>
       <body style={{ background: "#0d0d0f", color: "#e2e2e5" }} className="antialiased">
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: "#1e1e28",
+              color: "#e2e2e5",
+              border: "1px solid #2a2a35",
+              fontSize: "13px",
+            },
+          }}
+        />
         {isAuthPage ? (
           <main className="min-h-screen">
             {children}

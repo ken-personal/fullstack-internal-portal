@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   postgres:
     image: postgres:15
@@ -22,16 +21,12 @@ services:
   backend-nestjs:
     build: ./backend-nestjs
     container_name: backend-nestjs
-    # 起動前にビルドして最新コードを反映させる
     command: sh -c "npx prisma generate && npm run build && npm run start:prod"
     env_file:
-      - .env
-    environment:
-      - JWT_SECRET=supersecret
-      - DATABASE_URL=postgresql://devuser:devpass@postgres:5432/devdb
+      - ./backend-nestjs/.env
     ports:
       - "3001:3000"
-      - "5555:5555" # ✅ 修正ポイント：Prisma Studio用の窓を開放
+      - "5555:5555"
     depends_on:
       postgres:
         condition: service_healthy

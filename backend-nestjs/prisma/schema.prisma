@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client" // ← これを追加
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -8,52 +8,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   title     String
-  name     String
-  email    String  @unique
-  password String
-  role     String  @default("user")
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
   createdAt DateTime @default(now())
 }
 
-// 売上モデル
 model Sale {
-  id        Int      @id @default(autoincrement())
-  title     String   // 案件名など
-  amount    Float    // 金額
-  user      String   // 入力者名
-  department String  // 部署名
-  date      DateTime // 入力された日付
-  createdAt DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  title      String
+  amount     Float
+  user       String
+  department String
+  date       DateTime
+  createdAt  DateTime @default(now())
 }
 
-// 経費モデル
 model Expense {
-  id        Int      @id @default(autoincrement())
-  title     String   // 費目など
-  amount    Float    // 金額
-  user      String   // 入力者名
-  department String  // 部署名
-  date      DateTime // 入力された日付
-  createdAt DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  title      String
+  amount     Float
+  user       String
+  department String
+  date       DateTime
+  createdAt  DateTime @default(now())
 }
 
 model Announcement {
   id        Int      @id @default(autoincrement())
-  title     String   // 件名
-  content   String   // 内容（長文対応）
-  author    String   // 作成者
-  date      DateTime @default(now()) // 投稿日時
+  title     String
+  content   String
+  author    String
+  date      DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// prisma/schema.prisma に追加
 model Inquiry {
   id        Int      @id @default(autoincrement())
   title     String
   message   String
   createdAt DateTime @default(now())
 }
-

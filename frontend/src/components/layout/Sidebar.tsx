@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   FaChartBar,
   FaDollarSign,
@@ -12,18 +13,28 @@ import {
   FaRobot,
 } from "react-icons/fa";
 
-const menu = [
-  { name: "ダッシュボード", href: "/dashboard", icon: FaChartBar },
-  { name: "売上管理", href: "/sales", icon: FaDollarSign },
-  { name: "経費管理", href: "/expenses", icon: FaMoneyBill },
-  { name: "社内連絡", href: "/announcements", icon: FaBullhorn },
-  { name: "お問い合わせ", href: "/inquiry", icon: FaEnvelope },
-  { name: "社員名簿", href: "/profile", icon: FaUser },
-  { name: "AI アシスタント", href: "/chat", icon: FaRobot },
+type Role = "ADMIN" | "MANAGER" | "USER";
+
+const allMenu = [
+  { name: "ダッシュボード", href: "/dashboard", icon: FaChartBar, roles: ["ADMIN", "MANAGER", "USER"] },
+  { name: "売上管理", href: "/sales", icon: FaDollarSign, roles: ["ADMIN", "MANAGER"] },
+  { name: "経費管理", href: "/expenses", icon: FaMoneyBill, roles: ["ADMIN", "MANAGER"] },
+  { name: "社内連絡", href: "/announcements", icon: FaBullhorn, roles: ["ADMIN", "MANAGER"] },
+  { name: "お問い合わせ", href: "/inquiry", icon: FaEnvelope, roles: ["ADMIN", "MANAGER"] },
+  { name: "社員名簿", href: "/profile", icon: FaUser, roles: ["ADMIN"] },
+  { name: "AI アシスタント", href: "/chat", icon: FaRobot, roles: ["ADMIN", "MANAGER", "USER"] },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [role, setRole] = useState<Role>("USER");
+
+  useEffect(() => {
+    const savedRole = localStorage.getItem("role") as Role;
+    if (savedRole) setRole(savedRole);
+  }, []);
+
+  const menu = allMenu.filter((item) => item.roles.includes(role));
 
   return (
     <aside
@@ -180,14 +191,14 @@ export default function Sidebar() {
             flexShrink: 0,
           }}
         >
-          管
+          {role === "ADMIN" ? "管" : role === "MANAGER" ? "M" : "U"}
         </div>
         <div>
           <p style={{ fontSize: 13, color: "#c2c2cc", fontWeight: 500, margin: 0 }}>
-            管理者
+            {role === "ADMIN" ? "管理者" : role === "MANAGER" ? "マネージャー" : "ユーザー"}
           </p>
           <p style={{ fontSize: 11, color: "#4a4a58", margin: 0 }}>
-            Administrator
+            {role}
           </p>
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +27,11 @@ export default function LoginPage() {
         const token = data.access_token || data.token;
         if (token) {
           localStorage.setItem("token", token);
-          window.location.href = "/";
+          localStorage.setItem("role", data.user?.role ?? "USER");
+          toast.success("ログインしました 👋");
+          setTimeout(() => {
+            window.location.href = "/dashboard";
+          }, 800);
         } else {
           setError("サーバーエラー：認証トークンが取得できませんでした。");
         }
@@ -34,6 +39,7 @@ export default function LoginPage() {
         setError(data.message || "メールアドレスかパスワードが正しくありません。");
       }
     } catch (err) {
+      toast.error("サーバーに接続できませんでした。");
       setError("サーバーに接続できませんでした。");
     } finally {
       setIsLoading(false);
