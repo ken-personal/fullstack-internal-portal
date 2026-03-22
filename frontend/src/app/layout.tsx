@@ -21,14 +21,13 @@ export default function RootLayout({
   const isAuthPage = pathname === "/login" || pathname === "/signup";
 
   useEffect(() => {
-     【開発確認用】認証チェック一時スキップ
-     const token =
-       typeof window !== "undefined" ? localStorage.getItem("token") : null;
-     if (!token && !isAuthPage) {
-       router.push("/login");
-     } else if (token && isAuthPage) {
-       router.push("/");
-     }
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token && !isAuthPage) {
+      router.push("/login");
+    } else if (token && isAuthPage) {
+      router.push("/");
+    }
     setIsAuthChecked(true);
   }, [pathname, isAuthPage, router]);
 
