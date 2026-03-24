@@ -59,3 +59,13 @@ model Inquiry {
   message   String
   createdAt DateTime @default(now())
 }
+
+model Document {
+  id         Int      @id @default(autoincrement())
+  fileName   String
+  fileKey    String
+  fileSize   Int
+  mimeType   String
+  uploadedBy String
+  createdAt  DateTime @default(now())
+}

@@ -11,6 +11,9 @@ import {
   FaUser,
   FaMoneyBill,
   FaRobot,
+  FaFolder,
+  FaSearch,
+  FaCreditCard,
 } from "react-icons/fa";
 
 type Role = "ADMIN" | "MANAGER" | "USER";
@@ -23,6 +26,9 @@ const allMenu = [
   { name: "お問い合わせ", href: "/inquiry", icon: FaEnvelope, roles: ["ADMIN", "MANAGER"] },
   { name: "社員名簿", href: "/profile", icon: FaUser, roles: ["ADMIN"] },
   { name: "AI アシスタント", href: "/chat", icon: FaRobot, roles: ["ADMIN", "MANAGER", "USER"] },
+  { name: "資料管理", href: "/documents", icon: FaFolder, roles: ["ADMIN", "MANAGER", "USER"] },
+  { name: "全文検索", href: "/search", icon: FaSearch, roles: ["ADMIN", "MANAGER", "USER"] },
+  { name: "料金プラン", href: "/stripe", icon: FaCreditCard, roles: ["ADMIN", "MANAGER", "USER"] },
 ];
 
 export default function Sidebar() {

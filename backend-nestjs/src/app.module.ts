@@ -7,13 +7,15 @@ import { AnnouncementsModule } from './announcements/announcements.module'
 import { InquiryModule } from './inquiry/inquiry.module'
 import { DashboardModule } from './dashboard/dashboard.module'
 import { AuthModule } from './auth/auth.module'
-// --- ここを修正：common ではなく database から Module をインポート ---
 import { PrismaModule } from './database/prisma.module'
+import { DocumentsModule } from './documents/documents.module'
+import { SearchModule } from './search/search.module'
+import { StripeModule } from './stripe/stripe.module'
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    PrismaModule, // --- ここに追加：これで全モジュールで Prisma が使えるようになる ---
+    PrismaModule,
     UsersModule,
     ExpensesModule,
     SalesModule,
@@ -21,8 +23,11 @@ import { PrismaModule } from './database/prisma.module'
     InquiryModule,
     DashboardModule,
     AuthModule,
+    DocumentsModule,
+    SearchModule,
+    StripeModule,
   ],
   controllers: [],
-  providers: [], // --- ここから PrismaService を削除（PrismaModule が管理するため） ---
+  providers: [],
 })
 export class AppModule {}
