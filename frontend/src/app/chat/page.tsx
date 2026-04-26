@@ -1,17 +1,25 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import api from "@/lib/api";
 
 type Message = {
   role: "user" | "ai";
   content: string;
+  sources?: string[];
+};
+
+const SOURCE_LABEL: Record<string, string> = {
+  announcement: "お知らせ",
+  user: "社員情報",
+  inquiry: "問い合わせ",
 };
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
-      content: "こんにちは。社内AIアシスタントです。質問や相談があればどうぞ。",
+      content:
+        "こんにちは。社内 AI アシスタントです。お知らせ・社員情報・問い合わせ履歴をもとに回答します。",
     },
   ]);
   const [input, setInput] = useState("");
@@ -28,18 +36,24 @@ export default function ChatPage() {
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setLoading(true);
+
     try {
-      const genAI = new GoogleGenerativeAI(
-        process.env.NEXT_PUBLIC_GEMINI_API_KEY!
+      // バックエンドの RAG エンドポイントを呼び出す（API キーはサーバー側で管理）
+      const { data } = await api.post<{ answer: string; sources: string[] }>(
+        "/ai/chat",
+        { message: userMessage }
       );
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      const result = await model.generateContent(userMessage);
-      const response = result.response.text();
-      setMessages((prev) => [...prev, { role: "ai", content: response }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "ai", content: data.answer, sources: data.sources },
+      ]);
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "ai", content: "エラーが発生しました。もう一度お試しください。" },
+        {
+          role: "ai",
+          content: "エラーが発生しました。もう一度お試しください。",
+        },
       ]);
     } finally {
       setLoading(false);
@@ -83,7 +97,7 @@ export default function ChatPage() {
             border: "1px solid #2a2a30",
           }}
         >
-          Gemini 1.5 Flash
+          RAG · Gemini 2.0 Flash
         </span>
       </div>
 
@@ -121,20 +135,48 @@ export default function ChatPage() {
                 AI
               </div>
             )}
-            <div
-              style={{
-                maxWidth: "70%",
-                padding: "8px 12px",
-                borderRadius: msg.role === "user" ? "8px 8px 2px 8px" : "8px 8px 8px 2px",
-                fontSize: 13,
-                lineHeight: 1.6,
-                background: msg.role === "user" ? "#5e6ad2" : "#1a1a1e",
-                color: msg.role === "user" ? "#ffffff" : "#c8c8d0",
-                border: msg.role === "user" ? "none" : "1px solid #2a2a30",
-              }}
-            >
-              {msg.content}
+
+            <div style={{ maxWidth: "70%", display: "flex", flexDirection: "column", gap: 4 }}>
+              <div
+                style={{
+                  padding: "8px 12px",
+                  borderRadius:
+                    msg.role === "user"
+                      ? "8px 8px 2px 8px"
+                      : "8px 8px 8px 2px",
+                  fontSize: 13,
+                  lineHeight: 1.6,
+                  background: msg.role === "user" ? "#5e6ad2" : "#1a1a1e",
+                  color: msg.role === "user" ? "#ffffff" : "#c8c8d0",
+                  border: msg.role === "user" ? "none" : "1px solid #2a2a30",
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {msg.content}
+              </div>
+
+              {/* 参照ソースバッジ */}
+              {msg.sources && msg.sources.length > 0 && (
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                  {msg.sources.map((src) => (
+                    <span
+                      key={src}
+                      style={{
+                        fontSize: 10,
+                        color: "#7878a0",
+                        background: "#1a1a24",
+                        border: "1px solid #2a2a38",
+                        borderRadius: 3,
+                        padding: "1px 6px",
+                      }}
+                    >
+                      {SOURCE_LABEL[src] ?? src}を参照
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
+
             {msg.role === "user" && (
               <div
                 style={{
@@ -221,7 +263,7 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="メッセージを入力..."
+            placeholder="社内情報について質問してください..."
             style={{
               width: "100%",
               background: "#1a1a1e",

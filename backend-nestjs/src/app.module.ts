@@ -11,6 +11,7 @@ import { PrismaModule } from './database/prisma.module'
 import { DocumentsModule } from './documents/documents.module'
 import { SearchModule } from './search/search.module'
 import { StripeModule } from './stripe/stripe.module'
+import { AiModule } from './ai/ai.module'
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { StripeModule } from './stripe/stripe.module'
     DocumentsModule,
     SearchModule,
     StripeModule,
+    AiModule,
   ],
   controllers: [],
   providers: [],
