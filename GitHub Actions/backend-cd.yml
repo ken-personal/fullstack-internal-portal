@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - "backend-nestjs/**"
+  # AWS シークレット設定後に手動でデプロイする場合
+  workflow_dispatch:
 
 env:
   AWS_REGION: ap-northeast-1
@@ -31,25 +33,45 @@ jobs:
         uses: actions/checkout@v4
 
       # =========================================
-      # 2. AWS認証（OIDC）
+      # 2. AWS シークレット設定確認
+      #    未設定の場合は以降のステップをスキップして正常終了
+      # =========================================
+      - name: Check AWS credentials are configured
+        id: check-aws
+        env:
+          AWS_ROLE_ARN: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+        run: |
+          if [ -z "$AWS_ROLE_ARN" ]; then
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "::notice::AWS_OIDC_ROLE_ARN が未設定のためデプロイをスキップします。"
+            echo "::notice::GitHub リポジトリの Settings > Secrets に AWS_OIDC_ROLE_ARN を設定してください。"
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+          fi
+
+      # =========================================
+      # 3. AWS認証（OIDC）
       # =========================================
       - name: Configure AWS credentials via OIDC
+        if: steps.check-aws.outputs.configured == 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       # =========================================
-      # 3. ECRログイン
+      # 4. ECRログイン
       # =========================================
       - name: Login to Amazon ECR
+        if: steps.check-aws.outputs.configured == 'true'
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       # =========================================
-      # 4. Dockerイメージビルド & ECRにpush
+      # 5. Dockerイメージビルド & ECRにpush
       # =========================================
       - name: Build and push Docker image
+        if: steps.check-aws.outputs.configured == 'true'
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -64,9 +86,10 @@ jobs:
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       # =========================================
-      # 5. Trivyセキュリティスキャン
+      # 6. Trivyセキュリティスキャン
       # =========================================
       - name: Run Trivy vulnerability scanner
+        if: steps.check-aws.outputs.configured == 'true'
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ steps.build-image.outputs.image }}
@@ -75,9 +98,10 @@ jobs:
           severity: "HIGH,CRITICAL"
 
       # =========================================
-      # 6. Prismaマイグレーション（本番DB）
+      # 7. Prismaマイグレーション（本番DB）
       # =========================================
       - name: Run Prisma migrations
+        if: steps.check-aws.outputs.configured == 'true'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
@@ -85,9 +109,10 @@ jobs:
           npx prisma migrate deploy
 
       # =========================================
-      # 7. ECSタスク定義を最新イメージで更新
+      # 8. ECSタスク定義を最新イメージで更新
       # =========================================
       - name: Download current task definition
+        if: steps.check-aws.outputs.configured == 'true'
         run: |
           aws ecs describe-task-definition \
             --task-definition internal-portal-backend \
@@ -95,6 +120,7 @@ jobs:
             > task-definition.json
 
       - name: Update ECS task definition with new image
+        if: steps.check-aws.outputs.configured == 'true'
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
@@ -103,9 +129,10 @@ jobs:
           image: ${{ steps.build-image.outputs.image }}
 
       # =========================================
-      # 8. ECSへデプロイ
+      # 9. ECSへデプロイ
       # =========================================
       - name: Deploy to ECS
+        if: steps.check-aws.outputs.configured == 'true'
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
@@ -114,10 +141,10 @@ jobs:
           wait-for-service-stability: true
 
       # =========================================
-      # 9. SNS通知（成功）
+      # 10. SNS通知（成功）
       # =========================================
       - name: Notify success via SNS
-        if: success()
+        if: steps.check-aws.outputs.configured == 'true' && success()
         run: |
           aws sns publish \
             --topic-arn ${{ secrets.SNS_TOPIC_ARN }} \
@@ -129,10 +156,10 @@ jobs:
           ステータス: 成功"
 
       # =========================================
-      # 10. SNS通知（失敗）
+      # 11. SNS通知（失敗）
       # =========================================
       - name: Notify failure via SNS
-        if: failure()
+        if: steps.check-aws.outputs.configured == 'true' && failure()
         run: |
           aws sns publish \
             --topic-arn ${{ secrets.SNS_TOPIC_ARN }} \
