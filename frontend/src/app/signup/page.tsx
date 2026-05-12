@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import api from "@/lib/api";
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
@@ -16,24 +17,15 @@ export default function SignUpPage() {
     e.preventDefault();
     setError("");
     try {
-      const res = await fetch("http://localhost:3001/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name, title }),
-      });
-      if (res.ok) {
-        toast.success("アカウントを作成しました！ログインしてください 🎉");
-        setTimeout(() => {
-          router.push("/login");
-        }, 1000);
-      } else {
-        const data = await res.json();
-        toast.error(data.message || "登録に失敗しました。");
-        setError(data.message || "登録に失敗しました。");
-      }
-    } catch (err) {
-      toast.error("サーバーに接続できませんでした。");
-      setError("サーバーに接続できませんでした。");
+      await api.post("/auth/signup", { email, password, name, title });
+      toast.success("アカウントを作成しました！ログインしてください 🎉");
+      setTimeout(() => {
+        router.push("/login");
+      }, 1000);
+    } catch (err: any) {
+      const message = err.response?.data?.message || "登録に失敗しました。";
+      toast.error(message);
+      setError(message);
     }
   };
 

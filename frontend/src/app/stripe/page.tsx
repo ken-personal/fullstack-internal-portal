@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { loadStripe } from "@stripe/stripe-js";
+import api from "@/lib/api";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -16,7 +17,6 @@ interface Plan {
 export default function StripePage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState<string | null>(null);
-  const API = "http://localhost:3001";
 
   useEffect(() => {
     fetchPlans();
@@ -24,12 +24,8 @@ export default function StripePage() {
 
   const fetchPlans = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API}/stripe/plans`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      setPlans(data);
+      const res = await api.get("/stripe/plans");
+      setPlans(res.data);
     } catch {
       toast.error("プランの取得に失敗しました");
     }
@@ -38,16 +34,8 @@ export default function StripePage() {
   const handleSubscribe = async (planId: string) => {
     setLoading(planId);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API}/stripe/create-checkout-session`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ priceId: planId, userId: "user_1" }),
-      });
-      const { url } = await res.json();
+      const res = await api.post("/stripe/create-checkout-session", { priceId: planId, userId: "user_1" });
+      const { url } = res.data;
       if (url) window.location.href = url;
     } catch {
       toast.error("決済セッションの作成に失敗しました");

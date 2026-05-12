@@ -2,6 +2,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import api from "@/lib/api";
 
 interface SearchResults {
   users: Array<{ id: number; name: string; email: string; role: string; createdAt: string }>;
@@ -13,7 +14,6 @@ export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState(false);
-  const API = "http://localhost:3001";
 
   const search = useCallback(async (q: string) => {
     if (q.trim().length < 2) {
@@ -22,12 +22,8 @@ export default function SearchPage() {
     }
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      setResults(data);
+      const res = await api.get(`/search?q=${encodeURIComponent(q)}`);
+      setResults(res.data);
     } catch {
       toast.error("検索に失敗しました");
     } finally {

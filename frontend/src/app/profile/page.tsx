@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
+import api from "@/lib/api";
 
 // 🔵 ダミー社員50名分のデータを生成する関数
 const generateDummyUsers = () => {
@@ -27,32 +28,20 @@ export default function ProfilePage() {
   const dummyUsers = useMemo(() => generateDummyUsers(), []);
 
   const fetchUsers = useCallback(async (query = "") => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    const url = query
+      ? `/users/search?q=${encodeURIComponent(query)}`
+      : "/users";
 
-    const url = query 
-      ? `http://localhost:3001/users/search?q=${encodeURIComponent(query)}`
-      : "http://localhost:3001/users";
-    
     try {
-      const res = await fetch(url, {
-        headers: { "Authorization": `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const dbData = await res.json();
-        // 🔴 DBからのデータとダミーデータを合体させる
-        const combined = [...dbData, ...dummyUsers];
-        
-        // 🔴 検索ワードがある場合はフィルタリング
-        const filtered = query 
-          ? combined.filter(u => u.name.includes(query) || u.title?.includes(query))
-          : combined;
-
-        setUsers(filtered);
-      }
+      const res = await api.get(url);
+      const dbData = res.data;
+      const combined = [...dbData, ...dummyUsers];
+      const filtered = query
+        ? combined.filter(u => u.name.includes(query) || u.title?.includes(query))
+        : combined;
+      setUsers(filtered);
     } catch (err) {
       console.error("一覧取得エラー:", err);
-      // エラー時もとりあえずダミーだけは出す
       setUsers(dummyUsers);
     }
   }, [dummyUsers]);
@@ -66,20 +55,16 @@ export default function ProfilePage() {
       }
       
       try {
-        const res = await fetch("http://localhost:3001/auth/profile", {
-          headers: { "Authorization": `Bearer ${token}` },
-        });
-
-        if (res.ok) {
-          const userData = await res.json();
-          setMe(userData);
-          await fetchUsers(); 
-        } else if (res.status === 401) {
+        const res = await api.get("/auth/profile");
+        setMe(res.data);
+        await fetchUsers();
+      } catch (err: any) {
+        if (err.response?.status === 401) {
           localStorage.removeItem("token");
           window.location.href = "/login";
+        } else {
+          console.error("初期化失敗:", err);
         }
-      } catch (err) {
-        console.error("初期化失敗:", err);
       } finally {
         setLoading(false);
       }

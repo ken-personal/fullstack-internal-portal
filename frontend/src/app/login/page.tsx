@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import api from "@/lib/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -17,30 +18,23 @@ export default function LoginPage() {
     setError("");
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:3001/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        const token = data.access_token || data.token;
-        if (token) {
-          localStorage.setItem("token", token);
-          localStorage.setItem("role", data.user?.role ?? "USER");
-          toast.success("ログインしました 👋");
-          setTimeout(() => {
-            window.location.href = "/dashboard";
-          }, 800);
-        } else {
-          setError("サーバーエラー：認証トークンが取得できませんでした。");
-        }
+      const res = await api.post("/auth/login", { email, password });
+      const data = res.data;
+      const token = data.access_token || data.token;
+      if (token) {
+        localStorage.setItem("token", token);
+        localStorage.setItem("role", data.user?.role ?? "USER");
+        toast.success("ログインしました 👋");
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 800);
       } else {
-        setError(data.message || "メールアドレスかパスワードが正しくありません。");
+        setError("サーバーエラー：認証トークンが取得できませんでした。");
       }
-    } catch (err) {
-      toast.error("サーバーに接続できませんでした。");
-      setError("サーバーに接続できませんでした。");
+    } catch (err: any) {
+      const message = err.response?.data?.message || "メールアドレスかパスワードが正しくありません。";
+      toast.error(message);
+      setError(message);
     } finally {
       setIsLoading(false);
     }

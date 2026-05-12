@@ -1,24 +1,21 @@
 "use client";
 import { useEffect, useState } from "react";
+import api from "@/lib/api";
 
 export default function AnnouncementsPage() {
   const [list, setList] = useState<any[]>([]);
   const [form, setForm] = useState({ title: "", content: "", author: "" });
 
   const fetchAll = async () => {
-    const res = await fetch("http://localhost:3001/announcements");
-    if (res.ok) setList(await res.json());
+    const res = await api.get("/announcements");
+    setList(res.data);
   };
 
   useEffect(() => { fetchAll(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("http://localhost:3001/announcements", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    await api.post("/announcements", form);
     setForm({ title: "", content: "", author: "" });
     fetchAll();
   };

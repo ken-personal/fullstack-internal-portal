@@ -1,31 +1,28 @@
 "use client";
 import { useEffect, useState } from "react";
+import api from "@/lib/api";
 
 export default function SalesPage() {
   const [sales, setSales] = useState<any[]>([]);
   const [form, setForm] = useState({ title: "", amount: 0, user: "", department: "", date: "" });
 
   const fetchSales = async () => {
-    const res = await fetch("http://localhost:3001/sales");
-    if (res.ok) setSales(await res.json());
+    const res = await api.get("/sales");
+    setSales(res.data);
   };
 
   useEffect(() => { fetchSales(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("http://localhost:3001/sales", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    await api.post("/sales", form);
     setForm({ title: "", amount: 0, user: "", department: "", date: "" });
     fetchSales();
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("削除しますか？")) return;
-    await fetch(`http://localhost:3001/sales/${id}`, { method: "DELETE" });
+    await api.delete(`/sales/${id}`);
     fetchSales();
   };
 

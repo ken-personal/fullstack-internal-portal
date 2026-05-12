@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import toast from "react-hot-toast";
+import api from "@/lib/api";
 
 interface Document {
   id: number;
@@ -15,7 +16,6 @@ interface Document {
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [uploading, setUploading] = useState(false);
-  const API = "http://localhost:3001";
 
   useEffect(() => {
     fetchDocuments();
@@ -23,12 +23,8 @@ export default function DocumentsPage() {
 
   const fetchDocuments = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API}/documents`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (res.ok) setDocuments(data);
+      const res = await api.get("/documents");
+      setDocuments(res.data);
     } catch {
       toast.error("ファイル一覧の取得に失敗しました");
     }
@@ -37,21 +33,14 @@ export default function DocumentsPage() {
   const uploadFile = async (file: File) => {
     setUploading(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API}/documents/upload-url`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          fileName: file.name,
-          contentType: file.type || "application/octet-stream",
-          fileSize: file.size,
-          uploadedBy: "管理者",
-        }),
+      const res = await api.post("/documents/upload-url", {
+        fileName: file.name,
+        contentType: file.type || "application/octet-stream",
+        fileSize: file.size,
+        uploadedBy: "管理者",
       });
-      const { uploadUrl } = await res.json();
+      const { uploadUrl } = res.data;
+      // S3への直接アップロードのため生fetchを使用
       await fetch(uploadUrl, {
         method: "PUT",
         body: file,
@@ -79,11 +68,8 @@ export default function DocumentsPage() {
 
   const downloadFile = async (id: number, fileName: string) => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API}/documents/${id}/download-url`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const { downloadUrl } = await res.json();
+      const res = await api.get(`/documents/${id}/download-url`);
+      const { downloadUrl } = res.data;
       const a = document.createElement("a");
       a.href = downloadUrl;
       a.download = fileName;
@@ -95,11 +81,7 @@ export default function DocumentsPage() {
 
   const deleteFile = async (id: number, fileName: string) => {
     try {
-      const token = localStorage.getItem("token");
-      await fetch(`${API}/documents/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/documents/${id}`);
       toast.success(`${fileName} を削除しました`);
       fetchDocuments();
     } catch {

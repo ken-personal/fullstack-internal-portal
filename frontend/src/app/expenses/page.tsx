@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import api from "@/lib/api";
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<any[]>([]);
@@ -9,17 +10,13 @@ export default function ExpensesPage() {
     amount: 0,
     user: "",
     department: "",
-    date: new Date().toISOString().split("T")[0], // 初期値に今日の日付
+    date: new Date().toISOString().split("T")[0],
   });
 
-  // 1. データの取得
   const fetchExpenses = async () => {
     try {
-      const res = await fetch("http://localhost:3001/expenses");
-      if (res.ok) {
-        const data = await res.json();
-        setExpenses(data);
-      }
+      const res = await api.get("/expenses");
+      setExpenses(res.data);
     } catch (err) {
       console.error("経費データの取得に失敗しました:", err);
     }
@@ -29,32 +26,22 @@ export default function ExpensesPage() {
     fetchExpenses();
   }, []);
 
-  // 2. 新規登録
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:3001/expenses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (res.ok) {
-        setForm({ title: "", amount: 0, user: "", department: "", date: new Date().toISOString().split("T")[0] });
-        fetchExpenses(); // 一覧を再更新
-      }
+      await api.post("/expenses", form);
+      setForm({ title: "", amount: 0, user: "", department: "", date: new Date().toISOString().split("T")[0] });
+      fetchExpenses();
     } catch (err) {
       alert("登録に失敗しました");
     }
   };
 
-  // 3. 削除
   const handleDelete = async (id: number) => {
     if (!confirm("この経費データを削除してもよろしいですか？")) return;
     try {
-      const res = await fetch(`http://localhost:3001/expenses/${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) fetchExpenses();
+      await api.delete(`/expenses/${id}`);
+      fetchExpenses();
     } catch (err) {
       alert("削除に失敗しました");
     }
