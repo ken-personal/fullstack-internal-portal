@@ -21,7 +21,7 @@
 
 ## 📌 プロジェクト概要
 
-通信キャリア向けAWS監視システムの**実務2年6ヶ月**の経験をベースに、
+通信キャリア向けAWS監視システムの**実務2年10ヶ月**の経験をベースに、
 **「本番稼働を前提とした設計」** を徹底して構築したフルスタック社内管理システムです。
 
 フロントエンド・バックエンド・インフラ・CI/CDまで**一気通貫で実装**し、
@@ -215,6 +215,7 @@ AWS_S3_BUCKET_NAME="your_bucket_name"
 STRIPE_SECRET_KEY="sk_test_..."
 
 # frontend/.env.local
+NEXT_PUBLIC_API_URL="http://localhost:3001"
 NEXT_PUBLIC_GEMINI_API_KEY="your_gemini_key"
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
 ```
@@ -226,12 +227,16 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
 ```
 fullstack-internal-portal/
 ├── frontend/                    # Next.js (App Router)
-│   └── src/app/
-│       ├── dashboard/           # ダッシュボード
-│       ├── chat/                # AIチャットボット
-│       ├── documents/           # 資料管理
-│       ├── search/              # 全文検索
-│       └── stripe/              # 決済
+│   └── src/
+│       ├── app/
+│       │   ├── dashboard/       # ダッシュボード
+│       │   ├── chat/            # AIチャットボット
+│       │   ├── documents/       # 資料管理
+│       │   ├── search/          # 全文検索
+│       │   └── stripe/          # 決済
+│       ├── types/               # ドメイン型定義（Sale / Expense / User など）
+│       ├── hooks/               # カスタムフック
+│       └── lib/api.ts           # axiosインスタンス（認証ヘッダー自動付与）
 ├── backend-nestjs/              # NestJS
 │   └── src/
 │       ├── auth/                # JWT認証
@@ -258,7 +263,9 @@ fullstack-internal-portal/
 
 | 課題 | 対応内容 |
 |-----|---------|
-| 認証セキュリティ | フロント依存の認証をNestJS Guardに移行 |
+| 認証セキュリティ | sales / expenses / announcementsにJwtAuthGuardを追加しエンドポイントを保護 |
+| API管理の統一 | 全ページのfetch直書きをaxiosインスタンス（@/lib/api）に統一し環境変数で制御 |
+| 型安全性 | @/types/index.tsにドメイン型を集約しany型を完全除去 |
 | S3セキュリティ | Presigned URLで直接アップロード（バックエンド経由なし） |
 | 検索パフォーマンス | GINインデックス + pg_trgmであいまい検索を高速化 |
 | CI/CDセキュリティ | OIDCでAWSアクセスキーをゼロに |
@@ -272,7 +279,7 @@ fullstack-internal-portal/
 
 **茂木 健一**
 
-- 本業：通信キャリア向けAWS監視システム運用・障害対応（2年6ヶ月）
+- 本業：通信キャリア向けAWS監視システム運用・障害対応（2年10ヶ月）
 - CloudWatchアラーム・通知フロー・自動化ロジックの改善提案が本番反映3件
 - AWS SAA取得済み / AWS SAP学習中
 
