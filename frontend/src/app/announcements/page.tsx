@@ -1,13 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import type { Announcement, CreateAnnouncementInput } from "@/types";
 
 export default function AnnouncementsPage() {
-  const [list, setList] = useState<any[]>([]);
-  const [form, setForm] = useState({ title: "", content: "", author: "" });
+  const [list, setList] = useState<Announcement[]>([]);
+  const [form, setForm] = useState<CreateAnnouncementInput>({ title: "", content: "", author: "" });
 
   const fetchAll = async () => {
-    const res = await api.get("/announcements");
+    const res = await api.get<Announcement[]>("/announcements");
     setList(res.data);
   };
 

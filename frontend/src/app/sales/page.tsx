@@ -1,13 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import type { Sale, CreateSaleInput } from "@/types";
 
 export default function SalesPage() {
-  const [sales, setSales] = useState<any[]>([]);
-  const [form, setForm] = useState({ title: "", amount: 0, user: "", department: "", date: "" });
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [form, setForm] = useState<CreateSaleInput>({ title: "", amount: 0, user: "", department: "", date: "" });
 
   const fetchSales = async () => {
-    const res = await api.get("/sales");
+    const res = await api.get<Sale[]>("/sales");
     setSales(res.data);
   };
 

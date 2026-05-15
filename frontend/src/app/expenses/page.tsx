@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import api from "@/lib/api";
+import type { Expense, CreateExpenseInput } from "@/types";
 
 export default function ExpensesPage() {
-  const [expenses, setExpenses] = useState<any[]>([]);
-  const [form, setForm] = useState({
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [form, setForm] = useState<CreateExpenseInput>({
     title: "",
     amount: 0,
     user: "",
@@ -15,7 +16,7 @@ export default function ExpensesPage() {
 
   const fetchExpenses = async () => {
     try {
-      const res = await api.get("/expenses");
+      const res = await api.get<Expense[]>("/expenses");
       setExpenses(res.data);
     } catch (err) {
       console.error("経費データの取得に失敗しました:", err);

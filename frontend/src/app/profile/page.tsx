@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import api from "@/lib/api";
+import type { User, UserListItem } from "@/types";
 
 // 🔵 ダミー社員50名分のデータを生成する関数
 const generateDummyUsers = () => {
@@ -19,8 +20,8 @@ const generateDummyUsers = () => {
 };
 
 export default function ProfilePage() {
-  const [me, setMe] = useState<any>(null);
-  const [users, setUsers] = useState<any[]>([]);
+  const [me, setMe] = useState<User | null>(null);
+  const [users, setUsers] = useState<UserListItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 

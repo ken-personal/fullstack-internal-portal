@@ -2,6 +2,7 @@
 
 import { useDashboard } from "@/hooks/useDashboard";
 import Link from "next/link";
+import type { Announcement } from "@/types";
 
 export default function DashboardPage() {
   const { data, loading } = useDashboard();
@@ -48,8 +49,8 @@ export default function DashboardPage() {
         {announcements.length === 0 ? (
           <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px" }}>現在、新しいお知らせはありません。</p>
         ) : (
-          announcements.map((a: any, i: number) => (
-            <div key={i} style={{ padding: "12px 0", borderBottom: "1px solid #f8fafc" }}>
+          announcements.map((a: Announcement) => (
+            <div key={a.id} style={{ padding: "12px 0", borderBottom: "1px solid #f8fafc" }}>
               <span style={{ fontSize: "12px", color: "#64748b", display: "block" }}>{a.createdAt ? new Date(a.createdAt).toLocaleDateString() : ""}</span>
               <span style={{ fontWeight: "600" }}>{a.title}</span>
             </div>

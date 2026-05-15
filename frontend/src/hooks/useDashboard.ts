@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import type { DashboardData, Sale, Expense } from "@/types";
 
 export function useDashboard() {
-  const [data, setData] = useState<any>({
+  const [data, setData] = useState<DashboardData>({
     totalSales: 0,
     totalExpenses: 0,
-    recentAnnouncements: []
+    recentAnnouncements: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -16,18 +17,18 @@ export function useDashboard() {
       setLoading(true);
       // 売上、経費、お知らせを同時に取得
       const [salesRes, expensesRes, announcementsRes] = await Promise.all([
-        api.get("/sales"),
-        api.get("/expenses"),
+        api.get<Sale[]>("/sales"),
+        api.get<Expense[]>("/expenses"),
         api.get("/announcements"),
       ]);
 
       // 数値として合計を算出
-      const totalS = Array.isArray(salesRes.data) 
-        ? salesRes.data.reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0) 
+      const totalS = Array.isArray(salesRes.data)
+        ? salesRes.data.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
         : 0;
 
-      const totalE = Array.isArray(expensesRes.data) 
-        ? expensesRes.data.reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0) 
+      const totalE = Array.isArray(expensesRes.data)
+        ? expensesRes.data.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
         : 0;
 
       setData({
