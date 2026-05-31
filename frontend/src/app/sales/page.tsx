@@ -2,29 +2,44 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import type { Sale, CreateSaleInput } from "@/types";
+import toast from "react-hot-toast";
 
 export default function SalesPage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [form, setForm] = useState<CreateSaleInput>({ title: "", amount: 0, user: "", department: "", date: "" });
 
   const fetchSales = async () => {
-    const res = await api.get<Sale[]>("/sales");
-    setSales(res.data);
+    try {
+      const res = await api.get<Sale[]>("/sales");
+      setSales(res.data);
+    } catch {
+      toast.error("売上データの取得に失敗しました");
+    }
   };
 
   useEffect(() => { fetchSales(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await api.post("/sales", form);
-    setForm({ title: "", amount: 0, user: "", department: "", date: "" });
-    fetchSales();
+    try {
+      await api.post("/sales", form);
+      setForm({ title: "", amount: 0, user: "", department: "", date: "" });
+      toast.success("売上を登録しました");
+      fetchSales();
+    } catch {
+      toast.error("売上の登録に失敗しました");
+    }
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("削除しますか？")) return;
-    await api.delete(`/sales/${id}`);
-    fetchSales();
+    try {
+      await api.delete(`/sales/${id}`);
+      toast.success("削除しました");
+      fetchSales();
+    } catch {
+      toast.error("削除に失敗しました");
+    }
   };
 
   return (

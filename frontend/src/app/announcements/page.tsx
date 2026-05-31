@@ -2,23 +2,33 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import type { Announcement, CreateAnnouncementInput } from "@/types";
+import toast from "react-hot-toast";
 
 export default function AnnouncementsPage() {
   const [list, setList] = useState<Announcement[]>([]);
   const [form, setForm] = useState<CreateAnnouncementInput>({ title: "", content: "", author: "" });
 
   const fetchAll = async () => {
-    const res = await api.get<Announcement[]>("/announcements");
-    setList(res.data);
+    try {
+      const res = await api.get<Announcement[]>("/announcements");
+      setList(res.data);
+    } catch {
+      toast.error("お知らせの取得に失敗しました");
+    }
   };
 
   useEffect(() => { fetchAll(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await api.post("/announcements", form);
-    setForm({ title: "", content: "", author: "" });
-    fetchAll();
+    try {
+      await api.post("/announcements", form);
+      setForm({ title: "", content: "", author: "" });
+      toast.success("お知らせを投稿しました");
+      fetchAll();
+    } catch {
+      toast.error("投稿に失敗しました");
+    }
   };
 
   return (
