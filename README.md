@@ -266,6 +266,8 @@ fullstack-internal-portal/
 | 認証セキュリティ | sales / expenses / announcementsにJwtAuthGuardを追加しエンドポイントを保護 |
 | API管理の統一 | 全ページのfetch直書きをaxiosインスタンス（@/lib/api）に統一し環境変数で制御 |
 | 型安全性 | @/types/index.tsにドメイン型を集約しany型を完全除去 |
+| エラーハンドリング | 全APIコールにtry/catchを追加しtoast通知でユーザーにフィードバック |
+| ローディングUX | テキスト表示をSkeleton（animate-pulse）コンポーネントに置き換え |
 | S3セキュリティ | Presigned URLで直接アップロード（バックエンド経由なし） |
 | 検索パフォーマンス | GINインデックス + pg_trgmであいまい検索を高速化 |
 | CI/CDセキュリティ | OIDCでAWSアクセスキーをゼロに |
