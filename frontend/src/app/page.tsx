@@ -3,11 +3,44 @@
 import { useDashboard } from "@/hooks/useDashboard";
 import Link from "next/link";
 import type { Announcement } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
   const { data, loading } = useDashboard();
 
-  if (loading) return <div style={{ padding: "50px", textAlign: "center" }}>📊 データを集計中...</div>;
+  if (loading) return (
+    <div style={{ padding: "30px", backgroundColor: "#f8fafc", minHeight: "100vh" }}>
+      {/* ヘッダースケルトン */}
+      <div style={{ marginBottom: "30px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Skeleton className="h-8 w-52" />
+        <div style={{ display: "flex", gap: "12px" }}>
+          <Skeleton className="h-10 w-24 rounded-xl" />
+          <Skeleton className="h-10 w-24 rounded-xl" />
+        </div>
+      </div>
+
+      {/* KPIカードスケルトン × 3 */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "20px", marginBottom: "40px" }}>
+        {[1, 2, 3].map((i) => (
+          <div key={i} style={{ background: "white", padding: "24px", borderRadius: "16px", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)", borderTop: "6px solid #e2e8f0" }}>
+            <Skeleton className="h-4 w-20 mb-3" />
+            <Skeleton className="h-9 w-36" />
+          </div>
+        ))}
+      </div>
+
+      {/* お知らせスケルトン */}
+      <div style={{ background: "white", padding: "24px", borderRadius: "16px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}>
+        <Skeleton className="h-5 w-28 mb-5" />
+        {[1, 2, 3].map((i) => (
+          <div key={i} style={{ padding: "12px 0", borderBottom: "1px solid #f8fafc" }}>
+            <Skeleton className="h-3 w-20 mb-2" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   // 🔴 ここでデータを「安全に」数値化する
   // data が { totalSales: 100 } の形でも、[ { amount: 100 } ] の配列でも動くようにガード

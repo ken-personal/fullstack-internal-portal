@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import api from "@/lib/api";
 import type { User, UserListItem } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // 🔵 ダミー社員50名分のデータを生成する関数
 const generateDummyUsers = () => {
@@ -73,7 +74,35 @@ export default function ProfilePage() {
     init();
   }, [fetchUsers]); 
 
-  if (loading) return <div style={{ padding: "40px", color: "black", textAlign: "center" }}>データを読み込み中...</div>;
+  if (loading) return (
+    <div style={{ padding: "40px", backgroundColor: "#f0f2f5", minHeight: "100vh" }}>
+      <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+        {/* 戻るリンク・タイトルスケルトン */}
+        <Skeleton className="h-4 w-32 mb-5" />
+        <Skeleton className="h-8 w-48 mb-6" />
+
+        {/* 検索バースケルトン */}
+        <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "12px", display: "flex", gap: "10px", marginBottom: "30px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
+          <Skeleton className="h-12 flex-1 rounded-lg" />
+          <Skeleton className="h-12 w-20 rounded-lg" />
+        </div>
+
+        {/* ログインユーザー情報スケルトン */}
+        <Skeleton className="h-14 w-full mb-6 rounded-lg" />
+
+        {/* ユーザーカードグリッドスケルトン × 6 */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "20px", marginTop: "20px" }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} style={{ backgroundColor: "white", padding: "20px", borderRadius: "12px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
+              <Skeleton className="h-5 w-28 mb-2" />
+              <Skeleton className="h-4 w-36 mb-2" />
+              <Skeleton className="h-3 w-44" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ padding: "40px", backgroundColor: "#f0f2f5", minHeight: "100vh", color: "black" }}>
