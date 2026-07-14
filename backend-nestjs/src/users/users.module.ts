@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
-import { PrismaModule } from '../database/prisma.module'; // パスが正しいか確認！
+import { PrismaModule } from '../database/prisma.module';
+import { AiModule } from '../ai/ai.module';
 
 @Module({
-  imports: [PrismaModule], // UsersServiceがDBを触るために必要
+  imports: [PrismaModule, AiModule],
   controllers: [UsersController],
   providers: [UsersService],
-  exports: [UsersService], // これを出すことで、AuthModule側で使えるようになる
+  exports: [UsersService],
 })
 export class UsersModule {}

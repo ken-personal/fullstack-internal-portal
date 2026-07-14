@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AnnouncementsService } from './announcements.service';
 import { AnnouncementsController } from './announcements.controller';
-import { PrismaModule } from '../database/prisma.module'; // ✅ すべてここを "../database/..." に
+import { PrismaModule } from '../database/prisma.module';
+import { AiModule } from '../ai/ai.module';
 
 @Module({
-  imports: [PrismaModule], // ✅ これで Service 内で PrismaService が注入可能になります
+  imports: [PrismaModule, AiModule],
   controllers: [AnnouncementsController],
   providers: [AnnouncementsService],
 })

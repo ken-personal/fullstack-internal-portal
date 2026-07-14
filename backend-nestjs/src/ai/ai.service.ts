@@ -77,7 +77,7 @@ export class AiService {
     return { indexed };
   }
 
-  private async upsertEmbedding(
+  async upsertEmbedding(
     sourceType: string,
     sourceId: number,
     content: string,
@@ -106,6 +106,13 @@ export class AiService {
         VALUES (${sourceType}, ${sourceId}, ${content}, ${vectorLiteral}::vector, NOW(), NOW())
       `;
     }
+  }
+
+  async deleteEmbedding(sourceType: string, sourceId: number): Promise<void> {
+    await this.prisma.$executeRaw`
+      DELETE FROM "DocumentEmbedding"
+      WHERE "sourceType" = ${sourceType} AND "sourceId" = ${sourceId}
+    `;
   }
 
   // ─── RAG チャット ───────────────────────────────────────────────────────

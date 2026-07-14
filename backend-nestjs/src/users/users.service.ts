@@ -1,25 +1,34 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { AiService } from '../ai/ai.service';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private ai: AiService,
+  ) {}
+
+  private embedUser(u: { id: number; name: string; title: string; role: string; email: string }) {
+    const text = `[社員] 名前: ${u.name} / 役職: ${u.title} / ロール: ${u.role} / メール: ${u.email}`;
+    this.ai.upsertEmbedding('user', u.id, text).catch(() => {});
+  }
 
   // 新規作成
   async create(dto: CreateUserDto) {
-    return this.prisma.user.create({
-      data: dto,
-    });
+    const user = await this.prisma.user.create({ data: dto });
+    this.embedUser(user);
+    return user;
   }
 
   // サインアップ用
   async signUp(dto: any) {
-    return this.prisma.user.create({
-      data: dto,
-    });
+    const user = await this.prisma.user.create({ data: dto });
+    this.embedUser(user);
+    return user;
   }
 
   // 全員取得
@@ -84,10 +93,9 @@ export class UsersService {
     if (dto.password) {
       data.password = await bcrypt.hash(dto.password, 10);
     }
-    return this.prisma.user.update({
-      where: { id },
-      data,
-    });
+    const user = await this.prisma.user.update({ where: { id }, data });
+    this.embedUser(user);
+    return user;
   }
 
   // 削除
