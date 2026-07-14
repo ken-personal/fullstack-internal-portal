@@ -268,6 +268,8 @@ fullstack-internal-portal/
 | 型安全性 | @/types/index.tsにドメイン型を集約しany型を完全除去 |
 | エラーハンドリング | 全APIコールにtry/catchを追加しtoast通知でユーザーにフィードバック |
 | ローディングUX | テキスト表示をSkeleton（animate-pulse）コンポーネントに置き換え |
+| RAG自動インデックス | お知らせ・問い合わせ・ユーザーの作成・更新時にAiServiceが自動でpgvectorへ埋め込み（手動登録不要） |
+| チャート実データ化 | SalesChart・ExpensePieChart・ProfitBarChartをAPIから取得した実データで描画（ダミーデータ廃止） |
 | S3セキュリティ | Presigned URLで直接アップロード（バックエンド経由なし） |
 | 検索パフォーマンス | GINインデックス + pg_trgmであいまい検索を高速化 |
 | CI/CDセキュリティ | OIDCでAWSアクセスキーをゼロに |
