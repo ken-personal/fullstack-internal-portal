@@ -69,13 +69,13 @@ function login() {
   const ok = check(res, {
     'login: status 200 or 201': (r) => r.status === 200 || r.status === 201,
     'login: token exists':      (r) => {
-      try { return !!JSON.parse(r.body).token; } catch { return false; }
+      try { return !!JSON.parse(r.body).access_token; } catch { return false; }
     },
   });
   errorRate.add(!ok);
   if (!ok) return null;
 
-  return JSON.parse(res.body).token;
+  return JSON.parse(res.body).access_token;
 }
 
 // ========== メインシナリオ ==========
@@ -89,7 +89,7 @@ export default function () {
   };
 
   // --- ダッシュボード ---
-  const dashRes = http.get(`${BASE_URL}/dashboard`, { headers });
+  const dashRes = http.get(`${BASE_URL}/dashboard/summary`, { headers });
   requestCount.add(1);
   check(dashRes, { 'dashboard: status 200': (r) => r.status === 200 });
   errorRate.add(dashRes.status !== 200);

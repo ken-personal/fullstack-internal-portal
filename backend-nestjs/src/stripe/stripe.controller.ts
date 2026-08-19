@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Get, UseGuards, Headers, Req, HttpCode } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request } from 'express';
 import { StripeService } from './stripe.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
