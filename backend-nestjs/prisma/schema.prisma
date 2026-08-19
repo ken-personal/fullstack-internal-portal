@@ -76,6 +76,7 @@ model Document {
 model StripeEvent {
   id          String   @id              // Stripe の event.id（evt_xxx）
   type        String                    // checkout.session.completed 等
+  status      String   @default("completed") // "completed" | "failed"
   processedAt DateTime @default(now())
 }
 
