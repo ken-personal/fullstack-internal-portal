@@ -145,11 +145,26 @@ Container        │ Docker / Docker Compose
 ## 🔍 全文検索（PostgreSQL pg_trgm）
 
 ```sql
--- GINインデックスによる高速あいまい検索
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE INDEX idx_user_name_trgm ON "User" USING GIN (name gin_trgm_ops);
+-- GINインデックスによる高速あいまい検索（prisma/sql/001_add_gin_trgm_indexes.sql）
+CREATE INDEX IF NOT EXISTS idx_user_name_trgm
+  ON "User" USING GIN (name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_announcement_title_trgm
+  ON "Announcement" USING GIN (title gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_announcement_content_trgm
+  ON "Announcement" USING GIN (content gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_inquiry_title_trgm
+  ON "Inquiry" USING GIN (title gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_inquiry_message_trgm
+  ON "Inquiry" USING GIN (message gin_trgm_ops);
+```
 
--- 社員・お知らせ・問い合わせの横断検索
+```bash
+# prisma db push 後にインデックスを適用
+psql $DATABASE_URL -f prisma/sql/001_add_gin_trgm_indexes.sql
+```
+
+```sql
+-- 社員・お知らせ・問い合わせの横断検索（similarity関数でスコアリング）
 SELECT * FROM "User"
 WHERE name % $1 OR name ILIKE '%' || $1 || '%'
 ORDER BY similarity(name, $1) DESC;
