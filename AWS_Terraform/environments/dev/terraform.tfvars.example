@@ -1,0 +1,27 @@
+# environments/dev/terraform.tfvars.example
+# cp terraform.tfvars.example terraform.tfvars して値を埋める
+
+project        = "internal-portal"
+environment    = "dev"
+aws_account_id = "123456789012"
+aws_region     = "ap-northeast-1"
+
+# ネットワーク（dev: シングルAZ・最小構成）
+vpc_cidr                     = "10.1.0.0/16"
+availability_zones           = ["ap-northeast-1a"]
+public_subnet_cidrs          = ["10.1.0.0/24"]
+private_app_subnet_cidrs     = ["10.1.10.0/24"]
+private_backend_subnet_cidrs = ["10.1.20.0/24"]
+private_db_subnet_cidrs      = ["10.1.30.0/24"]
+
+# ドメイン
+domain_name = "dev.example.com"
+
+# データベース（dev: 最小インスタンス・Multi-AZなし）
+db_name           = "portaldb_dev"
+db_username       = "postgres"
+db_password       = "changeme"
+db_instance_class = "db.t3.micro"
+
+# 監視
+alert_email = "dev-alert@example.com"

@@ -1,0 +1,26 @@
+# environments/prod/terraform.tfvars.example
+
+project        = "internal-portal"
+environment    = "production"
+aws_account_id = "123456789012"
+aws_region     = "ap-northeast-1"
+
+# ネットワーク（prod: マルチAZ・冗長構成）
+vpc_cidr                     = "10.0.0.0/16"
+availability_zones           = ["ap-northeast-1a", "ap-northeast-1c"]
+public_subnet_cidrs          = ["10.0.0.0/24", "10.0.1.0/24"]
+private_app_subnet_cidrs     = ["10.0.10.0/24", "10.0.11.0/24"]
+private_backend_subnet_cidrs = ["10.0.20.0/24", "10.0.21.0/24"]
+private_db_subnet_cidrs      = ["10.0.30.0/24", "10.0.31.0/24"]
+
+# ドメイン
+domain_name = "example.com"
+
+# データベース（prod: t3.medium・Multi-AZあり）
+db_name           = "portaldb"
+db_username       = "postgres"
+db_password       = "changeme"
+db_instance_class = "db.t3.medium"
+
+# 監視
+alert_email = "prod-alert@example.com"

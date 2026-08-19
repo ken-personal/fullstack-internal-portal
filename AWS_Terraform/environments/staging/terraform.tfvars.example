@@ -1,0 +1,26 @@
+# environments/staging/terraform.tfvars.example
+
+project        = "internal-portal"
+environment    = "staging"
+aws_account_id = "123456789012"
+aws_region     = "ap-northeast-1"
+
+# ネットワーク（staging: マルチAZ・本番同等構成）
+vpc_cidr                     = "10.2.0.0/16"
+availability_zones           = ["ap-northeast-1a", "ap-northeast-1c"]
+public_subnet_cidrs          = ["10.2.0.0/24", "10.2.1.0/24"]
+private_app_subnet_cidrs     = ["10.2.10.0/24", "10.2.11.0/24"]
+private_backend_subnet_cidrs = ["10.2.20.0/24", "10.2.21.0/24"]
+private_db_subnet_cidrs      = ["10.2.30.0/24", "10.2.31.0/24"]
+
+# ドメイン
+domain_name = "staging.example.com"
+
+# データベース（staging: t3.small・Multi-AZあり）
+db_name           = "portaldb_staging"
+db_username       = "postgres"
+db_password       = "changeme"
+db_instance_class = "db.t3.small"
+
+# 監視
+alert_email = "staging-alert@example.com"
