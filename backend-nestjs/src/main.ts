@@ -1,8 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import * as express from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
+
+  // Stripe Webhook は署名検証のため rawBody が必要
+  app.use(
+    '/stripe/webhook',
+    express.raw({ type: 'application/json' }),
+  );
 
   // ✅ これがないとフロントエンドから通信を拒否されます
   app.enableCors();

@@ -182,8 +182,32 @@ const session = await stripe.checkout.sessions.create({
   line_items: [{ price_data: { currency: 'jpy', ... }, quantity: 1 }],
   success_url: `${BASE_URL}/stripe/success`,
   cancel_url: `${BASE_URL}/stripe/cancel`,
+  metadata: { userId },
 });
 ```
+
+```typescript
+// Webhook 署名検証 + 冪等性担保
+async handleWebhook(rawBody: Buffer, sig: string): Promise<void> {
+  // 1. 署名検証（改ざん・リプレイ攻撃防止）
+  const event = this.stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+
+  // 2. 冪等性チェック（同一イベントの二重処理防止）
+  const already = await this.prisma.stripeEvent.findUnique({ where: { id: event.id } });
+  if (already) return;
+
+  // 3. イベント処理
+  if (event.type === 'checkout.session.completed') {
+    const userId = (event.data.object as Stripe.Checkout.Session).metadata?.userId;
+    // サブスクリプション有効化処理
+  }
+
+  // 4. 処理済みを記録（StripeEvent テーブルに event.id を保存）
+  await this.prisma.stripeEvent.create({ data: { id: event.id, type: event.type } });
+}
+```
+
+> **設計ポイント：** NestJS では `app.use('/stripe/webhook', express.raw(...))` で Webhook ルートのみ rawBody を受け取り、他のルートは JSON パースを維持。`StripeEvent` テーブルで `event.id` の重複チェックにより冪等性を担保。
 
 ---
 

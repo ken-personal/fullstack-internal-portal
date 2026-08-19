@@ -72,6 +72,13 @@ model Document {
   createdAt  DateTime @default(now())
 }
 
+/// Stripe Webhook 冪等性管理テーブル
+model StripeEvent {
+  id          String   @id              // Stripe の event.id（evt_xxx）
+  type        String                    // checkout.session.completed 等
+  processedAt DateTime @default(now())
+}
+
 /// RAG 用ベクトル埋め込みテーブル（Gemini text-embedding-004: 768 次元）
 model DocumentEmbedding {
   id         Int      @id @default(autoincrement())

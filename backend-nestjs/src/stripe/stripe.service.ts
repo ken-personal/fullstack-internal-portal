@@ -1,13 +1,45 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../database/prisma.service';
 import Stripe from 'stripe';
 
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
 
-  constructor() {
+  constructor(private prisma: PrismaService) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2026-02-25.clover',
+      apiVersion: '2026-02-25.clover',
+    });
+  }
+
+  async handleWebhook(rawBody: Buffer, sig: string): Promise<void> {
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+
+    // 1. 署名検証（改ざん・リプレイ攻撃防止）
+    let event: Stripe.Event;
+    try {
+      event = this.stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+    } catch {
+      throw new BadRequestException('Webhook signature verification failed');
+    }
+
+    // 2. 冪等性チェック（同一イベントの二重処理防止）
+    const already = await this.prisma.stripeEvent.findUnique({
+      where: { id: event.id },
+    });
+    if (already) return;
+
+    // 3. イベント処理
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const userId = session.metadata?.userId;
+      // TODO: userId に対してサブスクリプション有効化処理を実装
+      console.log(`Subscription activated for userId: ${userId}`);
+    }
+
+    // 4. 処理済みとして記録
+    await this.prisma.stripeEvent.create({
+      data: { id: event.id, type: event.type },
     });
   }
 
